@@ -8,6 +8,7 @@
 
 #include <codecvt>
 #include <cassert>
+#include <locale>
 
 #include "cangjie/Basic/Print.h"
 #include "cangjie/Utils/CheckUtils.h"

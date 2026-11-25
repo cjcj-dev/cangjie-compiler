@@ -4,6 +4,7 @@
 #
 # See https://cangjie-lang.cn/pages/LICENSE for license information.
 
+cmake_policy(SET CMP0114 NEW)
 externalproject_get_property(cjnative BINARY_DIR)
 set(LLVM_GC_BINARY_DIR "${BINARY_DIR}")
 find_package(Python3 COMPONENTS Interpreter REQUIRED)
@@ -80,6 +81,7 @@ endif()
 if(NOT "${LLDB_CMAKE_C_FLAGS}" STREQUAL "")
     list(APPEND LLDB_CMAKE_ARGS -DCMAKE_C_FLAGS=${LLDB_CMAKE_C_FLAGS})
 endif()
+string(APPEND LLDB_CMAKE_CXX_FLAGS " -I\"${CMAKE_BINARY_DIR}/schema\"")
 if(NOT "${LLDB_CMAKE_CXX_FLAGS}" STREQUAL "")
     list(APPEND LLDB_CMAKE_ARGS -DCMAKE_CXX_FLAGS=${LLDB_CMAKE_CXX_FLAGS})
 endif()
@@ -176,9 +178,10 @@ ExternalProject_Add(
     SOURCE_SUBDIR lldb
     BINARY_DIR ${CMAKE_BINARY_DIR}/third_party/lldb-build
     LIST_SEPARATOR |
-    CMAKE_ARGS ${LLDB_CMAKE_ARGS}
+    CMAKE_ARGS ${LLDB_CMAKE_ARGS} ${CJCJ_LLDB_ARGS}
     USES_TERMINAL_BUILD ON
-    DEPENDS cjnative)
+    DEPENDS cjnative
+    STEP_TARGETS build configure)
 # Install lldb binaries, lldb, lldb-server, etc.
 install(
     DIRECTORY ${LLVM_GC_LLDB_INSTALL_PREFIX}/bin
@@ -210,11 +213,9 @@ endif()
 
 # For Windows, dlls are installed in bin directory. Import libraries are not required.
 if(DARWIN)
-    install(FILES
-        ${CMAKE_BINARY_DIR}/third_party/xml2/lib/libxml2.dylib
-        ${CMAKE_BINARY_DIR}/third_party/xml2/lib/libxml2.16.dylib
-        ${CMAKE_BINARY_DIR}/third_party/xml2/lib/libxml2.2.14.0.dylib
-        DESTINATION third_party/llvm/lib)
+    install(CODE "file(INSTALL DESTINATION \"\${CMAKE_INSTALL_PREFIX}/third_party/llvm/lib\"
+        TYPE SHARED_LIBRARY FOLLOW_SYMLINK_CHAIN
+        FILES \"${CMAKE_BINARY_DIR}/third_party/xml2/lib/libxml2.dylib\")")
     # Install lldb libraries, liblldb.so, liblldb.so.15, etc. liblldbIntelFeatures.so is not installed.
     install(
         DIRECTORY ${LLVM_GC_LLDB_INSTALL_PREFIX}/lib
@@ -223,11 +224,9 @@ if(DARWIN)
         FILES_MATCHING
             REGEX "lib/liblldb")
 elseif(NOT WIN32)
-    install(FILES
-        ${CMAKE_BINARY_DIR}/third_party/xml2/lib/libxml2.so
-        ${CMAKE_BINARY_DIR}/third_party/xml2/lib/libxml2.so.16
-        ${CMAKE_BINARY_DIR}/third_party/xml2/lib/libxml2.so.2.14.0
-        DESTINATION third_party/llvm/lib)
+    install(CODE "file(INSTALL DESTINATION \"\${CMAKE_INSTALL_PREFIX}/third_party/llvm/lib\"
+        TYPE SHARED_LIBRARY FOLLOW_SYMLINK_CHAIN
+        FILES \"${CMAKE_BINARY_DIR}/third_party/xml2/lib/libxml2.so\")")
     # Install lldb libraries, liblldb.so, liblldb.so.15, etc. liblldbIntelFeatures.so is not installed.
     install(
         DIRECTORY ${LLVM_GC_LLDB_INSTALL_PREFIX}/lib

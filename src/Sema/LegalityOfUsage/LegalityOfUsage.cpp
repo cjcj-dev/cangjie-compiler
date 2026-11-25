@@ -12,6 +12,8 @@
 
 #include "TypeCheckerImpl.h"
 
+#include <iterator>
+
 #include "Diags.h"
 #include "InitializationChecker.h"
 #include "cangjie/AST/Node.h"

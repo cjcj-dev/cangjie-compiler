@@ -12,6 +12,8 @@
 
 #include "ParserImpl.h"
 
+#include <iterator>
+
 #include "cangjie/AST/Clone.h"
 #include "cangjie/AST/Match.h"
 #include "cangjie/AST/Node.h"

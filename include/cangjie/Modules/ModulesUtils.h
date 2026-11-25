@@ -13,6 +13,8 @@
 #ifndef CANGJIE_MODULES_UTILS_H
 #define CANGJIE_MODULES_UTILS_H
 
+#include <iterator>
+
 #include "cangjie/AST/Node.h"
 #include "cangjie/AST/Utils.h"
 #include "cangjie/Basic/Utils.h"

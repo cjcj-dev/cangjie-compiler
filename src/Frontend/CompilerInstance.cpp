@@ -13,6 +13,7 @@
 #include "cangjie/Frontend/CompilerInstance.h"
 
 #include <fstream>
+#include <iterator>
 
 #include "PrintSymbolTable.h"
 #include "cangjie/AST/PrintNode.h"

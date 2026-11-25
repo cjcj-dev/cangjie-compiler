@@ -42,6 +42,7 @@ set(FLATBUFFERS_INCLUDE_DIR
     ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_BINARY_DIR}/include
     PARENT_SCOPE)
 add_custom_target(CangjieFlatbuffersHeaders DEPENDS ${FLATC_OUTPUTS} ${FLATC_LIBAST_OUTPUTS})
+install(FILES ${FLATC_OUTPUTS} DESTINATION include/flatbuffers)
 
 # Install flatbuffers toolchain and runtime support for std.ast / libast consumers.
 # flatc ships with cjc; libs-only / cross-libs builds must not overwrite the host SDK flatc.

@@ -243,7 +243,7 @@ bool Driver::ExecuteCompilation() const
     std::future<bool> future = std::async(DeleteInstance, instance);
     bool res = InvokeCompileToolchain();
     Utils::ProfileRecorder::Start("Main Stage", "DeleteInstanceLeftTime");
-    future.get();
+    res = future.get() && res;
     Utils::ProfileRecorder::Stop("Main Stage", "DeleteInstanceLeftTime");
     return res;
 }

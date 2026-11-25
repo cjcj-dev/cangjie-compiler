@@ -9,8 +9,8 @@
 #define CANGJIE_DEMANGLER_H
 
 #include <array>
-#ifndef BUILD_LIB_CANGJIE_DEMANGLE
 #include <vector>
+#ifndef BUILD_LIB_CANGJIE_DEMANGLE
 #include "Base/CString.h"
 #endif
 #ifdef BUILD_LIB_CANGJIE_DEMANGLE

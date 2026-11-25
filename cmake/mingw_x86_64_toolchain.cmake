@@ -40,8 +40,23 @@ set(OTHER_FLAGS
 # - ld in the compiler’s search directories.
 # - target-ld in PATH.
 # Hence, we have to make a symlink to lld with the required name, and pass its directory to cross-gcc using "-B".
-find_program(lld_path lld${CMAKE_EXECUTABLE_SUFFIX})
-if(NOT lld_path)
+string(REPLACE [[\]] "/" _cangjie_cc "${CMAKE_C_COMPILER}")
+get_filename_component(_cangjie_cc_name "${_cangjie_cc}" NAME)
+string(TOLOWER "${_cangjie_cc_name}" _cangjie_cc_name)
+set(_cangjie_clang FALSE)
+if(_cangjie_cc_name MATCHES "(^|-)clang([+][+])?(-[0-9.]+)?([.]exe)?$" OR CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    set(_cangjie_clang TRUE)
+else()
+    find_program(lld_path lld${CMAKE_EXECUTABLE_SUFFIX})
+endif()
+if(_cangjie_clang)
+    set(OTHER_FLAGS "${OTHER_FLAGS} -fuse-ld=lld")
+    get_filename_component(_cangjie_cc_dir "${CMAKE_C_COMPILER}" DIRECTORY)
+    if(_cangjie_cc_dir)
+        find_program(CMAKE_AR NAMES llvm-ar llvm-ar.exe HINTS "${_cangjie_cc_dir}" NO_DEFAULT_PATH)
+        find_program(CMAKE_RANLIB NAMES llvm-ranlib llvm-ranlib.exe HINTS "${_cangjie_cc_dir}" NO_DEFAULT_PATH)
+    endif()
+elseif(NOT lld_path)
     message(WARNING "`lld` cannot be found. `ld` will be used to link cjc.exe instead, but it may take much longer.")
 else()
     file(MAKE_DIRECTORY ${CMAKE_BINARY_DIR}/toolchain/)
@@ -78,12 +93,18 @@ endif()
 # Besides gcc and g++, there are also copies of them with the triple prefix
 # in a native MinGW toolchain, like x86_64-w64-mingw32-gcc.
 # Use those with the prefix here in order to be compatible with cross-compilation.
-set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)
-set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
+# Preserve an explicitly selected compiler (including its absolute path).
+# The historical names are llvm-mingw aliases, not a requirement to use GCC.
+if(NOT CMAKE_C_COMPILER)
+    set(CMAKE_C_COMPILER x86_64-w64-mingw32-gcc)
+endif()
+if(NOT CMAKE_CXX_COMPILER)
+    set(CMAKE_CXX_COMPILER x86_64-w64-mingw32-g++)
+endif()
 find_program(CMAKE_AR llvm-ar)
 find_program(CMAKE_RANLIB llvm-ranlib)
-set(LLVM_BUILD_C_COMPILER x86_64-w64-mingw32-gcc)
-set(LLVM_BUILD_CXX_COMPILER x86_64-w64-mingw32-g++)
+set(LLVM_BUILD_C_COMPILER "${CMAKE_C_COMPILER}")
+set(LLVM_BUILD_CXX_COMPILER "${CMAKE_CXX_COMPILER}")
 
 set(LINKER_OPTION_PREFIX "-Wl,")
 set(MAKE_SO_STACK_PROTECTOR_OPTION -fstack-protector)

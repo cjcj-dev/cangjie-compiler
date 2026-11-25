@@ -32,6 +32,7 @@ endif()
 # Handle third-party dependencies
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake/")
 include(Flatbuffer)
+include("${CMAKE_SOURCE_DIR}/cmake/modules/InstallWindowsToolchain.cmake")
 
 if(CANGJIE_BUILD_CJDB)
     include(Xml2)
@@ -260,10 +261,12 @@ if(CANGJIE_CODEGEN_CJNATIVE_BACKEND) # i.e. "--compile-backend" option
             list(APPEND LLVM_CMAKE_ARGS -DCOMPILER_RT_USE_BUILTINS_LIBRARY=TRUE)
             list(APPEND LLVM_CMAKE_ARGS -DCOMPILER_RT_USE_LLVM_UNWINDER=TRUE)
             list(APPEND LLVM_CMAKE_ARGS -DSANITIZER_CXX_ABI=libc++)
-            list(APPEND LLVM_CMAKE_ARGS -DCMAKE_SYSTEM_NAME=Windows)
             list(APPEND LLVM_CMAKE_ARGS -DLLVM_HOST_TRIPLE=x86_64-w64-mingw32)
-            set(NATIVE_LLVM_CMAKE_ARGS -Wno-dev|-Wno-deprecated)
-            list(APPEND LLVM_CMAKE_ARGS -DCROSS_TOOLCHAIN_FLAGS_LLVM_NATIVE=${NATIVE_LLVM_CMAKE_ARGS})
+            if(NOT CMAKE_HOST_WIN32)
+                list(APPEND LLVM_CMAKE_ARGS -DCMAKE_SYSTEM_NAME=Windows)
+                set(NATIVE_LLVM_CMAKE_ARGS -Wno-dev|-Wno-deprecated)
+                list(APPEND LLVM_CMAKE_ARGS -DCROSS_TOOLCHAIN_FLAGS_LLVM_NATIVE=${NATIVE_LLVM_CMAKE_ARGS})
+            endif()
             set(LLVM_CMAKE_EXE_LINKER_FLAGS "${LLVM_CMAKE_EXE_LINKER_FLAGS} -Wl,--no-insert-timestamp -lunwind")
             set(LLVM_CMAKE_SHARED_LINKER_FLAGS "${LLVM_CMAKE_SHARED_LINKER_FLAGS} -Wl,--no-insert-timestamp -lunwind")
         endif()
@@ -446,7 +449,7 @@ if(CANGJIE_CODEGEN_CJNATIVE_BACKEND) # i.e. "--compile-backend" option
             add_custom_command(
                 TARGET cjnative
                 POST_BUILD
-                COMMAND git log -1 --oneline --decorate > ${CMAKE_BINARY_DIR}/${THIRD_PARTY_LLVM}/VERSION.txt
+                COMMAND "${CJCJ_NATIVE_NODE}" "${CMAKE_CURRENT_SOURCE_DIR}/cmake/llvm-source-version.mjs" "${SOURCE_DIR}" "${CMAKE_BINARY_DIR}/${THIRD_PARTY_LLVM}/VERSION.txt" "${CJ_LLVM_COMMIT}"
                 # The command `cmake -P ExtractRtlib.cmake` will run the `file` commands like `file(GLOB ...)`
                 # at the building stage instead of the configuration stage.
                 COMMAND
@@ -536,7 +539,7 @@ if(CANGJIE_CODEGEN_CJNATIVE_BACKEND) # i.e. "--compile-backend" option
             ${LLVM_LIBS}
             PARENT_SCOPE)
     endif()
-    if(MINGW)
+    if(MINGW AND NOT CANGJIE_TOOLCHAIN_RUNTIME_FILES)
         include(AddMinGWLibs)
     endif()
     if(OHOS)
